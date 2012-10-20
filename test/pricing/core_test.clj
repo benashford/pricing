@@ -1,7 +1,8 @@
 (ns pricing.core-test
-  (:use clojure.test
-        pricing.core))
+  (:use pricing.core
+        midje.sweet))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(fact (sample {}) =>
+  {:total 100
+   :tax-rate 0.2
+   :total-inc-tax 120.0})

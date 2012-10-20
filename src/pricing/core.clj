@@ -1,6 +1,7 @@
-(ns pricing.core)
+(ns pricing.core
+  (:use pricing.engine))
 
-(defn -main
-  "I don't do a whole lot."
-  [& args]
-  (println "Hello, World!"))
+(defmodel sample
+  (attr :total 100)
+  (attr :tax-rate 0.2)
+  (attr :total-inc-tax (* :total (+ :tax-rate 1))))
