@@ -1,6 +1,7 @@
 (ns pricing.engine)
 
 (def ^:dynamic steps nil)
+(def ^:dynamic lookups nil)
 
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
@@ -20,16 +21,27 @@
 (defmacro attr [name value]
   `(swap! steps conj
     (fn []
-      {'~name (substitute-accessors ~value)})))
+      (let [result# (substitute-accessors ~value)]
+        {'~name result#}))))
+
+(defmacro table [table-name & data]
+  `(swap! lookups assoc ~table-name (into {} '~data)))
+
+(defmacro lookup [table-name key]
+  `(do
+    ((lookups ~table-name) ~key)))
 
 (defmacro defmodel [modelname & body]
-  `(binding [steps (atom [])]
+  `(binding [steps (atom [])
+             lookups (atom {})]
     ~@body
-    (let [steps-int# @steps]
+    (let [steps-int# @steps
+          lookups-int# @lookups]
       (defn ~modelname [in#]
         (let [out-atom# (atom {})]
           (doseq [step# steps-int#]
             (binding [in in#
-                      out @out-atom#]
+                      out @out-atom#
+                      lookups lookups-int#]
               (swap! out-atom# merge (step#))))
           @out-atom#)))))
