@@ -1,2 +1,4 @@
 * Default BigDecimal calculations/numbers
 * Nested calculations/scopes/etc.
+* Ranges as keys in lookups
+* Apportionment, etc. - e.g. minimum prices
