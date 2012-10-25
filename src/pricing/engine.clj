@@ -31,6 +31,27 @@
   `(do
      ((lookups ~table-name) ~key)))
 
+(defmacro item [item-name & body]
+  `(let [inner-steps# (atom [])]
+     (binding [steps inner-steps#]
+       ~@body)
+     (swap! steps conj
+            (fn []
+              (let [outer-out# out
+                    out-atom# (atom {})]
+                (doseq [step# @inner-steps#]
+                  (binding [out (merge @out-atom# outer-out#)]
+                    (swap! out-atom# merge (step#))))
+                {'~item-name @out-atom#})))))
+
+(defn per-item [f key]
+  (->>
+   out
+   vals
+   (filter map?)
+   (map key)
+   (reduce f)))
+
 (defmacro defmodel [modelname & body]
   `(binding [steps (atom [])
              lookups (atom {})]
