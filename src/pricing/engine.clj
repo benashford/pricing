@@ -27,9 +27,8 @@
 (defmacro table [table-name & data]
   `(swap! lookups assoc ~table-name (into {} '~data)))
 
-(defmacro lookup [table-name key]
-  `(do
-     ((lookups ~table-name) ~key)))
+(defn lookup [table-name key]
+  ((lookups table-name) key))
 
 (defmacro item [item-name & body]
   `(let [inner-steps# (atom [])]

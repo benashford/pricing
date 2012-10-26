@@ -10,7 +10,7 @@
   (attr :number-of-employees (+ (in :full-time-employees) (in :part-time-employees)))
   (attr :price-per-employee (lookup :prices :number-of-employees))
   (attr :total (* :number-of-employees :price-per-employee))
-  
+
   (table :prices
          [1 10.0]
          [2 9.5]
@@ -20,18 +20,17 @@
          [6 8]))
 
 (defmodel sample3
-  
   (attr :number-of-employees (+ (in :full-time-employees) (in :part-time-employees)))
-  
+
   (item :support
         (attr :standard-discount 0.75)
         (attr :unit-cost (lookup :support-prices :number-of-employees))
         (attr :total (* :unit-cost :number-of-employees :standard-discount)))
-  
+
   (item :licensing
         (attr :unit-cost (lookup :licence-prices :number-of-employees))
         (attr :total (* :unit-cost :number-of-employees)))
-  
+
   (attr :total (per-item + :total))
 
   (table :support-prices
@@ -45,7 +44,7 @@
          [8 7.5]
          [9 7.5]
          [10 7.5])
-  
+
   (table :licence-prices
          [1 1000.0]
          [2 1000.0]

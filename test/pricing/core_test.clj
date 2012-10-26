@@ -2,6 +2,8 @@
   (:use pricing.core
         midje.sweet))
 
+; These test the sample models in the pricing.core namespace
+
 (fact (sample {}) =>
       {:total 100
        :tax-rate 0.2
