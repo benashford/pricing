@@ -1,3 +1,4 @@
+[![Build Status](https://secure.travis-ci.org/benashford/pricing.png)](http://travis-ci.org/benashford/pricing)
 
 An experiment in Domain Specific Languages in Clojure.
 
