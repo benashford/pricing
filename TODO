@@ -1,3 +1,5 @@
+* Test-drive everything
 * Default BigDecimal calculations/numbers
 * Ranges as keys in lookups
 * Apportionment, etc. - e.g. minimum prices
+* In-fix calculations
