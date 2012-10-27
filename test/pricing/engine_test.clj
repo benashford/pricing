@@ -2,6 +2,13 @@
   (:use pricing.engine
         midje.sweet))
 
+;; walker
+;;
+(facts "about walker"
+       (walker (+ 1 2) number? (fn [item#] `(+ ~item# 1))) =expands-to=> (+ (clojure.core/+ 1 1) (clojure.core/+ 2 1))
+       (walker (+ 1 2) number? (fn [item#] (+ item# 1))) =expands-to=> (+ 2 3)
+       (walker (+ 1.0 2.0) float? (fn [item#] (bigdec item#))) =expands-to=> (+ 1.0M 2.0M))
+
 ;; substitute-accessors
 ;;
 (facts "about substitute-accessors"

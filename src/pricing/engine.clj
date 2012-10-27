@@ -6,6 +6,25 @@
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
 
+(defn walk-int [exprs pred callback]
+  (let [pred-f (resolve pred)
+        callback-f (eval callback)
+        walk (fn [item]
+               (cond
+                (pred-f item) (callback-f item)
+                (seq? item) (walk-int item pred callback)
+                (vector? item) (walk-int item pred callback)
+                (map? item) (walk-int item pred callback)
+                :else item))]
+    (cond
+     (seq? exprs) (map walk exprs)
+     (vector? exprs) (mapv walk exprs)
+     (map? exprs) (into {} (map (fn [[k v]] [k (walk v)]) exprs))
+     :else (walk exprs))))
+
+(defmacro walker [exprs pred callback]
+  (walk-int exprs pred callback))
+
 (defn substitute-accessors-int [exprs]
   (letfn [(substitute [item]
             (cond
