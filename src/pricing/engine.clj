@@ -65,8 +65,7 @@
    (reduce f)))
 
 (defmacro to-bigdec [exprs]
-  `(walker ~exprs float? (fn [item#]
-                           (bigdec item#))))
+  `(walker ~exprs float? bigdec))
 
 (defmacro defmodel [modelname & body]
   `(binding [steps (atom [])
