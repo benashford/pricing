@@ -64,22 +64,9 @@
    (map key)
    (reduce f)))
 
-(defn to-bigdec-int [exprs]
-  (letfn [(wrap [item]
-            (cond
-             (float? item) (bigdec item)
-             (seq? item) (to-bigdec-int item)
-             (vector? item) (to-bigdec-int item)
-             (map? item) (to-bigdec-int item)
-             :else item))]
-    (cond
-     (seq? exprs) (map wrap exprs)
-     (vector? exprs) (mapv wrap exprs)
-     (map? exprs) (into {} (map (fn [[k v]] [k (wrap v)]) exprs))
-     :else (wrap exprs))))
-
 (defmacro to-bigdec [exprs]
-  (to-bigdec-int exprs))
+  `(walker ~exprs float? (fn [item#]
+                           (bigdec item#))))
 
 (defmacro defmodel [modelname & body]
   `(binding [steps (atom [])
