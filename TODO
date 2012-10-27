@@ -1,4 +1,5 @@
-* Default BigDecimal calculations/numbers
 * Ranges as keys in lookups
 * Apportionment, etc. - e.g. minimum prices
 * In-fix calculations
+* Sensible default rounding for prices
+* Remove near-duplication in macros that scan whole expressions

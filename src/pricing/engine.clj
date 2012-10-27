@@ -6,17 +6,20 @@
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
 
-(defmacro substitute-accessors [exprs]
+(defn substitute-accessors-int [exprs]
   (letfn [(substitute [item]
             (cond
-             (keyword? item) `(if (contains? out '~item)
-                                (out '~item)
+             (keyword? item) `(if (contains? out ~item)
+                                (out ~item)
                                 ~item)
-             (seq? item) `(substitute-accessors ~item)
+             (seq? item) (substitute-accessors-int item)
              :else item))]
     (if (seq? exprs)
       (map substitute exprs)
       (substitute exprs))))
+
+(defmacro substitute-accessors [exprs]
+  (substitute-accessors-int exprs))
 
 (defmacro attr [name value]
   `(swap! steps conj
@@ -51,10 +54,29 @@
    (map key)
    (reduce f)))
 
+(defn to-bigdec-int [exprs]
+  (letfn [(wrap [item]
+            (cond
+             (float? item) (bigdec item)
+             (seq? item) (to-bigdec-int item)
+             (vector? item) (to-bigdec-int item)
+             (map? item) (to-bigdec-int item)
+             :else item))]
+    (cond
+     (seq? exprs) (map wrap exprs)
+     (vector? exprs) (mapv wrap exprs)
+     (map? exprs) (into {} (map (fn [[k v]] [k (wrap v)]) exprs))
+     :else (wrap exprs))))
+
+(defmacro to-bigdec [exprs]
+  (to-bigdec-int exprs))
+
 (defmacro defmodel [modelname & body]
   `(binding [steps (atom [])
              lookups (atom {})]
-     ~@body
+     (to-bigdec
+      (do
+        ~@body))
      (let [steps-int# @steps
            lookups-int# @lookups]
        (defn ~modelname [in#]
