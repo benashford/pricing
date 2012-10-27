@@ -25,20 +25,11 @@
 (defmacro walker [exprs pred callback]
   (walk-int exprs pred callback))
 
-(defn substitute-accessors-int [exprs]
-  (letfn [(substitute [item]
-            (cond
-             (keyword? item) `(if (contains? out ~item)
-                                (out ~item)
-                                ~item)
-             (seq? item) (substitute-accessors-int item)
-             :else item))]
-    (if (seq? exprs)
-      (map substitute exprs)
-      (substitute exprs))))
-
 (defmacro substitute-accessors [exprs]
-  (substitute-accessors-int exprs))
+  `(walker ~exprs keyword? (fn [item#]
+                             `(if (contains? out ~item#)
+                                (out ~item#)
+                                ~item#))))
 
 (defmacro attr [name value]
   `(swap! steps conj
