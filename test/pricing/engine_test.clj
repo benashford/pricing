@@ -2,6 +2,15 @@
   (:use pricing.engine
         midje.sweet))
 
+;; no-quote
+;;
+(facts "about no-quote"
+       (try
+         (no-quote "test")
+         (catch Exception e
+           (no-quote? e))) => true
+       (no-quote? (Exception. "other")) => false)
+
 ;; walker
 ;;
 (facts "about walker"
@@ -43,10 +52,15 @@
 
 ;; lookup
 ;;
+(defn is-no-quote [wrapped-e msg]
+  (let [e (.throwable wrapped-e)]
+    (if (no-quote? e)
+      (= msg (message e)))))
+
 (facts "about lookup"
        (binding [lookups {:stuff {1 2}}]
          (lookup :stuff 1) => 2
-         (lookup :stuff 2) => nil))
+         (lookup :stuff 2) => #(is-no-quote % "No such key: 2 in table: :stuff")))
 
 ;; item
 ;;

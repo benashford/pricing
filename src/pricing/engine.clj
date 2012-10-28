@@ -14,6 +14,9 @@
 (defn no-quote [msg]
   (throw (proxy [Exception pricing.engine.NoQuote] [] (message [] msg))))
 
+(defn no-quote? [e]
+  (satisfies? NoQuote e))
+
 ;; Macro support
 
 (defn walk-int [exprs pred callback]
@@ -53,7 +56,10 @@
   `(swap! lookups assoc ~table-name (into {} '~data)))
 
 (defn lookup [table-name key]
-  ((lookups table-name) key))
+  (let [lookup-table (lookups table-name)]
+    (if (contains? lookup-table key)
+      (lookup-table key)
+      (no-quote (str "No such key: " key " in table: " table-name)))))
 
 (defmacro item [item-name & body]
   `(let [inner-steps# (atom [])]
@@ -97,6 +103,6 @@
                  (swap! out-atom# merge (step#))))
              @out-atom#)
            (catch Exception e#
-             (if (satisfies? NoQuote e#)
+             (if (no-quote? e#)
                {:status :noquote :reason (message e#)}
                (throw e#))))))))
