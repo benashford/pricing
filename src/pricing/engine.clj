@@ -53,13 +53,16 @@
               {'~name result#}))))
 
 (defmacro table [table-name & data]
-  `(swap! lookups assoc ~table-name (into {} '~data)))
+  `(let [lookup-table# (into {} '~data)]
+     (swap! lookups assoc ~table-name
+            (fn [key#]
+              (if (contains? lookup-table# key#)
+                (lookup-table# key#)
+                (no-quote (str "No such key: " key# " in table: " ~table-name)))))))
 
 (defn lookup [table-name key]
-  (let [lookup-table (lookups table-name)]
-    (if (contains? lookup-table key)
-      (lookup-table key)
-      (no-quote (str "No such key: " key " in table: " table-name)))))
+  (let [lookup-fn (lookups table-name)]
+    (lookup-fn key)))
 
 (defmacro item [item-name & body]
   `(let [inner-steps# (atom [])]

@@ -42,25 +42,19 @@
          (attr :test (+ 1 2)) => #(step-equals % {:test 3})
          (attr :test (+ :blah 2)) => #(step-equals % {:test 32})))
 
-;; table
-;;
-(facts "about table"
-       (binding [lookups (atom {})]
-         (table :stuff [1 2])
-         (@lookups :stuff) => {1 2}
-         (@lookups :nonsuch) => nil))
-
-;; lookup
+;; table & lookup
 ;;
 (defn is-no-quote [wrapped-e msg]
   (let [e (.throwable wrapped-e)]
     (if (no-quote? e)
       (= msg (message e)))))
 
-(facts "about lookup"
-       (binding [lookups {:stuff {1 2}}]
-         (lookup :stuff 1) => 2
-         (lookup :stuff 2) => #(is-no-quote % "No such key: 2 in table: :stuff")))
+(facts "about table"
+       (binding [lookups (atom {})]
+         (table :stuff [1 2])
+         (binding [lookups @lookups]
+           (lookup :stuff 1) => 2
+           (lookup :stuff 2) => #(is-no-quote % "No such key: 2 in table: :stuff"))))
 
 ;; item
 ;;
