@@ -6,6 +6,16 @@
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
 
+;; utilities
+
+(defn fence-panel [posts]
+  (loop [[a & others] posts
+         panels []]
+    (let [b (first others)]
+      (if-not b
+        panels
+        (recur others (conj panels [a b]))))))
+
 ;; Error handling
 
 (defprotocol NoQuote
@@ -59,6 +69,20 @@
               (if (contains? lookup-table# key#)
                 (lookup-table# key#)
                 (no-quote (str "No such key: " key# " in table: " ~table-name)))))))
+
+(defmacro range-table [table-name & data]
+  (let [ranges (map vector (fence-panel (map first data)) (map second data))
+        [last-post last-value] (last data)
+        key-param (gensym "key")]
+    `(swap! lookups assoc ~table-name
+            (fn [~key-param]
+              (cond
+               ~@(apply concat
+                        (for [[[start end] value] ranges]
+                          (list `(and (>= ~key-param ~start) (< ~key-param ~end)) `~value)))
+               ~@(if-not (= last-value :stop)
+                   `((>= ~key-param ~last-post) ~last-value))
+               :else (no-quote (str "No such key: " ~key-param " in table: " ~table-name)))))))
 
 (defn lookup [table-name key]
   (let [lookup-fn (lookups table-name)]

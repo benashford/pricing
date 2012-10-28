@@ -2,6 +2,13 @@
   (:use pricing.engine
         midje.sweet))
 
+;; utils
+(facts "about fence-panel"
+       (fence-panel [0]) => []
+       (fence-panel [0 1]) => [[0 1]]
+       (fence-panel [0 1 5]) => [[0 1] [1 5]]
+       (fence-panel [0 1 5 10 20]) => [[0 1] [1 5] [5 10] [10 20]])
+
 ;; no-quote
 ;;
 (facts "about no-quote"
@@ -45,9 +52,12 @@
 ;; table & lookup
 ;;
 (defn is-no-quote [wrapped-e msg]
-  (let [e (.throwable wrapped-e)]
-    (if (no-quote? e)
-      (= msg (message e)))))
+  (try 
+    (let [e (.throwable wrapped-e)]
+      (if (no-quote? e)
+        (= msg (message e))))
+    (catch Throwable t
+      false)))
 
 (facts "about table"
        (binding [lookups (atom {})]
@@ -55,6 +65,36 @@
          (binding [lookups @lookups]
            (lookup :stuff 1) => 2
            (lookup :stuff 2) => #(is-no-quote % "No such key: 2 in table: :stuff"))))
+
+;; range-table
+;;
+(facts "about range-table"
+       (binding [lookups (atom {})]
+         (range-table :stuff
+                      [0 100]
+                      [5 75]
+                      [10 50]
+                      [100 :stop])
+         (binding [lookups @lookups]
+           (lookup :stuff -1) => #(is-no-quote % "No such key: -1 in table: :stuff")
+           (lookup :stuff 0) => 100
+           (lookup :stuff 1) => 100
+           (lookup :stuff 5) => 75
+           (lookup :stuff 10) => 50
+           (lookup :stuff 99) => 50
+           (lookup :stuff 134) => #(is-no-quote % "No such key: 134 in table: :stuff")))
+       (binding [lookups (atom {})]
+         (range-table :stuff
+                      [0 100]
+                      [5 75]
+                      [10 50]
+                      [100 25])
+         (binding [lookups @lookups]
+           (lookup :stuff 25) => 50
+           (lookup :stuff 99) => 50
+           (lookup :stuff 100) => 25
+           (lookup :stuff 101) => 25
+           (lookup :stuff 10000012) => 25)))
 
 ;; item
 ;;
