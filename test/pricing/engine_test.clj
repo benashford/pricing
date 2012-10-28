@@ -81,3 +81,12 @@
        (to-bigdec (with-precision 5 (+ 1 (* 0.3 (/ 22.0 7.0))))) => 1.9429M
        (binding [steps (atom [])]
          (to-bigdec (attr :test 12.0)) => #(step-equals % {:test 12.0M})))
+
+;; status
+;;
+(facts "about status"
+       (defmodel good)
+       (good {}) => {:status :quote}
+       (defmodel fussy
+         (attr :noway (no-quote "no chance")))
+       (fussy {}) => {:status :noquote :reason "no chance"})

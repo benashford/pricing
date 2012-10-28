@@ -6,6 +6,16 @@
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
 
+;; Error handling
+
+(defprotocol NoQuote
+  (message [msg]))
+
+(defn no-quote [msg]
+  (throw (proxy [Exception pricing.engine.NoQuote] [] (message [] msg))))
+
+;; Macro support
+
 (defn walk-int [exprs pred callback]
   (let [pred-f (resolve pred)
         callback-f (eval callback)
@@ -24,6 +34,8 @@
 
 (defmacro walker [exprs pred callback]
   (walk-int exprs pred callback))
+
+;; Pricing engine
 
 (defmacro substitute-accessors [exprs]
   `(walker ~exprs keyword? (fn [item#]
@@ -76,10 +88,15 @@
      (let [steps-int# @steps
            lookups-int# @lookups]
        (defn ~modelname [in#]
-         (let [out-atom# (atom {})]
-           (doseq [step# steps-int#]
-             (binding [in in#
-                       out @out-atom#
-                       lookups lookups-int#]
-               (swap! out-atom# merge (step#))))
-           @out-atom#)))))
+         (try
+           (let [out-atom# (atom {:status :quote})]
+             (doseq [step# steps-int#]
+               (binding [in in#
+                         out @out-atom#
+                         lookups lookups-int#]
+                 (swap! out-atom# merge (step#))))
+             @out-atom#)
+           (catch Exception e#
+             (if (satisfies? NoQuote e#)
+               {:status :noquote :reason (message e#)}
+               (throw e#))))))))
