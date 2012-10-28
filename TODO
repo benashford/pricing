@@ -1,3 +1,4 @@
+* Handling invalid conditions
 * Ranges as keys in lookups
 * Apportionment, etc. - e.g. minimum prices
 * In-fix calculations
