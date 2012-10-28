@@ -79,7 +79,7 @@
               (cond
                ~@(apply concat
                         (for [[[start end] value] ranges]
-                          (list `(and (>= ~key-param ~start) (< ~key-param ~end)) `~value)))
+                          `((and (>= ~key-param ~start) (< ~key-param ~end)) ~value)))
                ~@(if-not (= last-value :stop)
                    `((>= ~key-param ~last-post) ~last-value))
                :else (no-quote (str "No such key: " ~key-param " in table: " ~table-name)))))))
