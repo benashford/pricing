@@ -4,3 +4,4 @@
 * Detailed write-up in README
 * Incoming validation
 * Filters (possibly the same as incoming validation)
+* On range filters: add option for infinite lower-ranges
