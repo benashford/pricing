@@ -3,3 +3,4 @@
 * Sensible default rounding for prices
 * Detailed write-up in README
 * Incoming validation
+* Filters (possibly the same as incoming validation)
