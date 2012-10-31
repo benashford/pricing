@@ -115,11 +115,11 @@
 ;;
 (facts "about per-item"
        (binding [out {:thing {:total 12} :stuff {:total 30}}]
-         (per-item + :total) => 42
-         (per-item min :total) => 12
-         (per-item max :total) => 30
-         (per-item + :total max 50) => 50
-         (per-item + :total (fn [& xs] (/ (reduce + xs) (count xs))) 10) => 26))
+         (per-item :total +) => 42
+         (per-item :total min) => 12
+         (per-item :total max) => 30
+         (per-item :total + max 50) => 50
+         (per-item :total + (fn [& xs] (/ (reduce + xs) (count xs))) 10) => 26))
 
 ;; to-bigdec
 ;;

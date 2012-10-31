@@ -104,8 +104,8 @@
 (def minimum-of max)
 
 (defn per-item
-  ([f key] (per-item f key identity))
-  ([f key f2 & f2-args]
+  ([key f] (per-item key f identity))
+  ([key f f2 & f2-args]
      (let [result (->>
                    out
                    vals

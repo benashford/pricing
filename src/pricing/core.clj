@@ -13,7 +13,7 @@
         (attr :unit-cost (lookup :licence-prices :number-of-employees))
         (attr :total (* :unit-cost :number-of-employees)))
 
-  (attr :total-before-discount (per-item + :total minimum-of 2500.0))
+  (attr :total-before-discount (per-item :total + minimum-of 2500.0))
 
   (attr :company-type-discount (lookup :company-type-discount (in :company-type)))
   
