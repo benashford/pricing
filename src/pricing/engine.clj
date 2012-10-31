@@ -106,13 +106,14 @@
 (defn per-item
   ([key f] (per-item key f identity))
   ([key f f2 & f2-args]
-     (let [result (->>
-                   out
-                   vals
-                   (filter map?)
-                   (map key)
-                   (reduce f))]
-       (apply f2 (conj (vec f2-args) result)))))
+     (->>
+      out
+      vals
+      (filter map?)
+      (map key)
+      (reduce f)
+      (conj (vec f2-args))
+      (apply f2))))
 
 (defmacro to-bigdec [exprs]
   `(walker ~exprs float? bigdec))
