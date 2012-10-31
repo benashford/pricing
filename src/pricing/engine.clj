@@ -101,13 +101,18 @@
                     (swap! out-atom# merge (step#))))
                 {'~item-name @out-atom#})))))
 
-(defn per-item [f key]
-  (->>
-   out
-   vals
-   (filter map?)
-   (map key)
-   (reduce f)))
+(def minimum-of max)
+
+(defn per-item
+  ([f key] (per-item f key identity))
+  ([f key f2 & f2-args]
+     (let [result (->>
+                   out
+                   vals
+                   (filter map?)
+                   (map key)
+                   (reduce f))]
+       (apply f2 (conj (vec f2-args) result)))))
 
 (defmacro to-bigdec [exprs]
   `(walker ~exprs float? bigdec))
@@ -121,15 +126,16 @@
      (let [steps-int# @steps
            lookups-int# @lookups]
        (defn ~modelname [in#]
-         (try
-           (let [out-atom# (atom {:status :quote})]
-             (doseq [step# steps-int#]
-               (binding [in in#
-                         out @out-atom#
-                         lookups lookups-int#]
-                 (swap! out-atom# merge (step#))))
-             @out-atom#)
-           (catch Exception e#
-             (if (no-quote? e#)
-               {:status :noquote :reason (message e#)}
-               (throw e#))))))))
+         (with-precision 12
+           (try
+             (let [out-atom# (atom {:status :quote})]
+               (doseq [step# steps-int#]
+                 (binding [in in#
+                           out @out-atom#
+                           lookups lookups-int#]
+                   (swap! out-atom# merge (step#))))
+               @out-atom#)
+             (catch Exception e#
+               (if (no-quote? e#)
+                 {:status :noquote :reason (message e#)}
+                 (throw e#)))))))))
