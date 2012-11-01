@@ -108,20 +108,31 @@
 
 (def minimum-of max)
 
+(defn ext-keyword [kw extension]
+  (keyword (str (name kw) extension)))
+
 (defmacro aggregation [key f & args]
   (let [f2 (if (nil? (first args)) identity (first args))
         f2-args (next args)]
     `(swap! aggregations conj
             (fn [out#]
-              (assoc out# ~key
-                (->>
-                 out#
-                 vals
-                 (filter map?)
-                 (map ~key)
-                 (reduce ~f)
-                 (conj (vec '~f2-args))
-                 (apply ~f2)))))))
+              (let [items# (filter (comp map? second) out#)
+                    before-f2# (->> items#
+                                    (map (comp ~key second))
+                                    (reduce ~f))
+                    after-f2# (apply ~f2 (conj (vec '~f2-args) before-f2#))
+                    apportionment-factor# (+ 1 (/ (- after-f2# before-f2#) before-f2#))]
+                (merge (merge out#
+                              {~key after-f2#
+                               (ext-keyword ~key "-apportionment-factor") apportionment-factor#})
+                       (into {}
+                             (map
+                              (fn [[k# v#]]
+                                (let [current-total# (~key v#)]
+                                  [k# (merge v#
+                                             {(ext-keyword ~key "-before-apportionment") current-total#
+                                              ~key (* current-total# apportionment-factor#)})]))
+                              items#))))))))
 
 (defmacro to-bigdec [exprs]
   `(walker ~exprs float? bigdec))

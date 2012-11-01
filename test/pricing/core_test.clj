@@ -11,9 +11,12 @@
                 :number-of-employees 7
                 :breakdown {:support {:standard-discount 0.75M
                                       :unit-cost 7.5M
+                                      :total-before-apportionment 39.375M
                                       :total 39.375M}
                             :licensing {:unit-cost 900.0M
+                                        :total-before-apportionment 6300.0M
                                         :total 6300.0M}
+                            :total-apportionment-factor 1M
                             :total 6339.375M}
                 :company-type-discount 10.0M
                 :total 6329.375M})
@@ -30,9 +33,12 @@
                 :number-of-employees 1
                 :breakdown {:support {:standard-discount 0.75M
                                       :unit-cost 10.0M
-                                      :total 7.500M}
+                                      :total-before-apportionment 7.500M
+                                      :total 18.6104218362M}
                             :licensing {:unit-cost 1000.0M
-                                        :total 1000.0M}
+                                        :total-before-apportionment 1000.0M
+                                        :total 2481.38957816M}
+                            :total-apportionment-factor 2.48138957816M
                             :total 2500.0M}
                 :company-type-discount 0.0M
                 :total 2500.0M})
