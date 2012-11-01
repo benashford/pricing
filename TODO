@@ -6,3 +6,5 @@
 * Filters (possibly the same as incoming validation)
 * On range tables: add option for infinite lower-ranges
 * Two-dimensional tables
+* Review both item and defmodel macro - there's a certain amount of both duplication and non idiomatic code
+* Access nested values in out with a dotted notation
