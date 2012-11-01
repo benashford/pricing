@@ -111,15 +111,22 @@
                                  (attr :other-stuff (+ 1 :stuff :blah))))
                      => #(step-equals % {:things {:stuff 12 :other-things {:other-stuff 43}}})))
 
-;; per-item
+;; aggregation
 ;;
-(facts "about per-item"
-       (binding [out {:thing {:total 12} :stuff {:total 30}}]
-         (per-item :total +) => 42
-         (per-item :total min) => 12
-         (per-item :total max) => 30
-         (per-item :total + max 50) => 50
-         (per-item :total + (fn [& xs] (/ (reduce + xs) (count xs))) 10) => 26))
+(defn check-aggregation [fns key value]
+  (let [f (last fns)]
+    (= ((f out) key) value)))
+
+(facts "about aggregation"
+       (binding [out {:thing {:total 12} :stuff {:total 30}}
+                 aggregations (atom [])]
+         (aggregation :total +) => #(check-aggregation % :total 42)
+         (aggregation :total min) => #(check-aggregation % :total 12)
+         (aggregation :total max) => #(check-aggregation % :total 30)
+         (aggregation :total + max 50) => #(check-aggregation % :total 50)
+         (aggregation :total + (fn [& xs]
+                                 (/ (reduce + xs)
+                                    (count xs))) 10) => #(check-aggregation % :total 26)))
 
 ;; to-bigdec
 ;;

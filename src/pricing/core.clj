@@ -4,20 +4,21 @@
 (defmodel sample
   (attr :number-of-employees (+ (in :full-time-employees) (in :part-time-employees)))
 
-  (item :support
-        (attr :standard-discount 0.75)
-        (attr :unit-cost (lookup :support-prices :number-of-employees))
-        (attr :total (* :unit-cost :number-of-employees :standard-discount)))
-
-  (item :licensing
-        (attr :unit-cost (lookup :licence-prices :number-of-employees))
-        (attr :total (* :unit-cost :number-of-employees)))
-
-  (attr :total-before-discount (per-item :total + minimum-of 2500.0))
+  (item :breakdown
+   (item :support
+         (attr :standard-discount 0.75)
+         (attr :unit-cost (lookup :support-prices :number-of-employees))
+         (attr :total (* :unit-cost :number-of-employees :standard-discount)))
+   
+   (item :licensing
+         (attr :unit-cost (lookup :licence-prices :number-of-employees))
+         (attr :total (* :unit-cost :number-of-employees)))
+   
+   (aggregation :total + minimum-of 2500.0))
 
   (attr :company-type-discount (lookup :company-type-discount (in :company-type)))
   
-  (attr :total (- :total-before-discount :company-type-discount))
+  (attr :total (- (:breakdown :total) :company-type-discount))
 
   (range-table :support-prices
          [1 10.0]

@@ -9,12 +9,12 @@
                :company-type "partnership"}) =>
                {:status :quote
                 :number-of-employees 7
-                :support {:standard-discount 0.75M
-                          :unit-cost 7.5M
-                          :total 39.375M}
-                :licensing {:unit-cost 900.0M
-                            :total 6300.0M}
-                :total-before-discount 6339.375M
+                :breakdown {:support {:standard-discount 0.75M
+                                      :unit-cost 7.5M
+                                      :total 39.375M}
+                            :licensing {:unit-cost 900.0M
+                                        :total 6300.0M}
+                            :total 6339.375M}
                 :company-type-discount 10.0M
                 :total 6329.375M})
 
@@ -28,12 +28,12 @@
                :company-type "limited"}) =>
                {:status :quote
                 :number-of-employees 1
-                :support {:standard-discount 0.75M
-                          :unit-cost 10.0M
-                          :total 7.500M}
-                :licensing {:unit-cost 1000.0M
-                            :total 1000.0M}
-                :total-before-discount 2500.0M
+                :breakdown {:support {:standard-discount 0.75M
+                                      :unit-cost 10.0M
+                                      :total 7.500M}
+                            :licensing {:unit-cost 1000.0M
+                                        :total 1000.0M}
+                            :total 2500.0M}
                 :company-type-discount 0.0M
                 :total 2500.0M})
                 

@@ -2,6 +2,7 @@
 
 (def ^:dynamic steps nil)
 (def ^:dynamic lookups nil)
+(def ^:dynamic aggregations nil)
 
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
@@ -89,8 +90,10 @@
     (lookup-fn key)))
 
 (defmacro item [item-name & body]
-  `(let [inner-steps# (atom [])]
-     (binding [steps inner-steps#]
+  `(let [inner-steps# (atom [])
+         inner-aggregations# (atom [])]
+     (binding [steps inner-steps#
+               aggregations inner-aggregations#]
        ~@body)
      (swap! steps conj
             (fn []
@@ -99,21 +102,26 @@
                 (doseq [step# @inner-steps#]
                   (binding [out (merge @out-atom# outer-out#)]
                     (swap! out-atom# merge (step#))))
+                (doseq [aggregation# @inner-aggregations#]
+                  (swap! out-atom# aggregation#))
                 {'~item-name @out-atom#})))))
 
 (def minimum-of max)
 
-(defn per-item
-  ([key f] (per-item key f identity))
-  ([key f f2 & f2-args]
-     (->>
-      out
-      vals
-      (filter map?)
-      (map key)
-      (reduce f)
-      (conj (vec f2-args))
-      (apply f2))))
+(defmacro aggregation [key f & args]
+  (let [f2 (if (nil? (first args)) identity (first args))
+        f2-args (next args)]
+    `(swap! aggregations conj
+            (fn [out#]
+              (assoc out# ~key
+                (->>
+                 out#
+                 vals
+                 (filter map?)
+                 (map ~key)
+                 (reduce ~f)
+                 (conj (vec '~f2-args))
+                 (apply ~f2)))))))
 
 (defmacro to-bigdec [exprs]
   `(walker ~exprs float? bigdec))
