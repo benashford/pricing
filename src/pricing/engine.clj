@@ -3,6 +3,7 @@
 (def ^:dynamic steps nil)
 (def ^:dynamic lookups nil)
 (def ^:dynamic aggregations nil)
+(def ^:dynamic roundings nil)
 
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
@@ -51,6 +52,18 @@
 
 ;; Pricing engine
 
+(defn round [number places]
+  (.setScale (with-precision 12 (bigdec number)) places java.math.BigDecimal/ROUND_HALF_EVEN))
+
+(defmacro apply-rounding [key & exprs]
+  `(let [rounding# (roundings ~key)]
+     (if rounding#
+       (round ~@exprs rounding#)
+       ~@exprs)))
+
+(defn rounding [key r]
+  (swap! roundings assoc key r))
+
 (defmacro substitute-accessors [exprs]
   `(walker ~exprs keyword? (fn [item#]
                              `(if (contains? out ~item#)
@@ -61,7 +74,7 @@
   `(swap! steps conj
           (fn []
             (let [result# (substitute-accessors ~value)]
-              {'~name result#}))))
+              {'~name (apply-rounding ~name result#)}))))
 
 (defmacro table [table-name & data]
   `(let [lookup-table# (into {} '~data)]
@@ -123,7 +136,7 @@
                     after-f2# (apply ~f2 (conj (vec '~f2-args) before-f2#))
                     apportionment-factor# (+ 1 (/ (- after-f2# before-f2#) before-f2#))]
                 (merge (merge out#
-                              {~key after-f2#
+                              {~key (apply-rounding ~key after-f2#)
                                (ext-keyword ~key "-apportionment-factor") apportionment-factor#})
                        (into {}
                              (map
@@ -131,7 +144,11 @@
                                 (let [current-total# (~key v#)]
                                   [k# (merge v#
                                              {(ext-keyword ~key "-before-apportionment") current-total#
-                                              ~key (* current-total# apportionment-factor#)})]))
+                                              ~key (apply-rounding
+                                                    ~key
+                                                    (*
+                                                     current-total#
+                                                     apportionment-factor#))})]))
                               items#))))))))
 
 (defmacro to-bigdec [exprs]
@@ -139,20 +156,23 @@
 
 (defmacro defmodel [modelname & body]
   `(binding [steps (atom [])
-             lookups (atom {})]
+             lookups (atom {})
+             roundings (atom {})]
      (to-bigdec
       (do
         ~@body))
      (let [steps-int# @steps
-           lookups-int# @lookups]
+           lookups-int# @lookups
+           roundings-int# @roundings]
        (defn ~modelname [in#]
-         (with-precision 12
+         (with-precision 12 :rounding HALF_EVEN
            (try
              (let [out-atom# (atom {:status :quote})]
                (doseq [step# steps-int#]
                  (binding [in in#
                            out @out-atom#
-                           lookups lookups-int#]
+                           lookups lookups-int#
+                           roundings roundings-int#]
                    (swap! out-atom# merge (step#))))
                @out-atom#)
              (catch Exception e#

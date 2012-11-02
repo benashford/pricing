@@ -2,6 +2,8 @@
   (:use pricing.engine))
 
 (defmodel sample
+  (rounding :total 2)
+  
   (attr :number-of-employees (+ (in :full-time-employees) (in :part-time-employees)))
 
   (item :breakdown

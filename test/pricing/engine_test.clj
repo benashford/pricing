@@ -27,6 +27,30 @@
        (walker (+ 1 :blah) keyword? (fn [_] 1)) =expands-to=> (+ 1 1)
        (walker (+ 1 :blah) keyword? (fn [item#] `(~item# {:blah 1}))) =expands-to=> (+ 1 (:blah {:blah 1})))
 
+;; round
+;;
+(facts "about round"
+       (round 0.333M 2) => 0.33M
+       (round 0.666M 2) => 0.67M
+       (round 0.33333 2) => 0.33M
+       (round 0.66666 2) => 0.67M
+       (round 1 2) => 1.00M)
+
+;; apply-rounding
+;;
+(facts "about apply-rounding"
+       (binding [roundings {:stuff 2}]
+         (apply-rounding :stuff 0.333M) => 0.33M
+         (apply-rounding :stuff 0.666M) => 0.67M
+         (apply-rounding :other 0.333M) => 0.333M))
+
+;; rounding
+;;
+(facts "about rounding"
+       (binding [roundings (atom {})]
+         (rounding :stuff 2) => #(= (% :stuff) 2)
+         (rounding :stuff 2) => #(nil? (% :other))))
+
 ;; substitute-accessors
 ;;
 (facts "about substitute-accessors"
@@ -44,7 +68,8 @@
 
 (facts "about attr"
        (binding [steps (atom [])
-                 out {:blah 30}]
+                 out {:blah 30}
+                 roundings {}]
          (attr :test 12) => #(step-equals % {:test 12})
          (attr :test (+ 1 2)) => #(step-equals % {:test 3})
          (attr :test (+ :blah 2)) => #(step-equals % {:test 32})))
@@ -100,7 +125,8 @@
 ;;
 (facts "about item"
        (binding [steps (atom [])
-                 out {:blah 30}]
+                 out {:blah 30}
+                 roundings {}]
          (item :things
                (attr :stuff 12)) => #(step-equals % {:things {:stuff 12}})
                (item :things
@@ -124,7 +150,8 @@
 
 (facts "about aggregation"
        (binding [out {:thing {:total 12} :stuff {:total 30}}
-                 aggregations (atom [])]
+                 aggregations (atom [])
+                 roundings {}]
          (aggregation :total +) => #(= ((check-aggregation %) :total) 42)
          (aggregation :total min) => #(= ((check-aggregation %) :total) 12)
          (aggregation :total max) => #(= ((check-aggregation %) :total) 30)
@@ -147,7 +174,8 @@
        (to-bigdec {:a 0.3 :b 0.4}) => {:a 0.3M :b 0.4M}
        (to-bigdec (+ 0.3 0.4)) => 0.7M
        (to-bigdec (with-precision 5 (+ 1 (* 0.3 (/ 22.0 7.0))))) => 1.9429M
-       (binding [steps (atom [])]
+       (binding [steps (atom [])
+                 roundings {}]
          (to-bigdec (attr :test 12.0)) => #(step-equals % {:test 12.0M})))
 
 ;; status
