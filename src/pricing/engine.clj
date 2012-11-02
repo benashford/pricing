@@ -135,9 +135,9 @@
                                     (reduce ~f))
                     after-f2# (apply ~f2 (conj (vec '~f2-args) before-f2#))
                     apportionment-factor# (+ 1 (/ (- after-f2# before-f2#) before-f2#))]
-                (merge (merge out#
-                              {~key (apply-rounding ~key after-f2#)
-                               (ext-keyword ~key "-apportionment-factor") apportionment-factor#})
+                (merge out#
+                       {~key (apply-rounding ~key after-f2#)
+                        (ext-keyword ~key "-apportionment-factor") apportionment-factor#}
                        (into {}
                              (map
                               (fn [[k# v#]]
