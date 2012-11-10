@@ -58,7 +58,10 @@
        (binding [out {:blah 30}]
          (substitute-accessors :blah) => 30
          (substitute-accessors (+ :blah 1)) => 31
-         (substitute-accessors (+ (+ :blah 1) 1)) => 32))
+         (substitute-accessors (+ (+ :blah 1) 1)) => 32)
+       (binding [out {:blah {:stuff 10}}]
+         (substitute-accessors :blah.stuff) => 10
+         (substitute-accessors :blah) = {:stuff 10}))
 
 ;; attr
 ;;

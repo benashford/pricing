@@ -1,4 +1,5 @@
-(ns pricing.engine)
+(ns pricing.engine
+  (:use [clojure.string :only [split]]))
 
 (def ^:dynamic steps nil)
 (def ^:dynamic lookups nil)
@@ -64,11 +65,12 @@
 (defn rounding [key r]
   (swap! roundings assoc key r))
 
+(defn get-out [key]
+  (get-in out (map keyword (split (name key) #"\.")) key))
+
 (defmacro substitute-accessors [exprs]
   `(walker ~exprs keyword? (fn [item#]
-                             `(if (contains? out ~item#)
-                                (out ~item#)
-                                ~item#))))
+                             `(get-out ~item#))))
 
 (defmacro attr [name value]
   `(swap! steps conj
