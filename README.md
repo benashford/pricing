@@ -57,6 +57,18 @@ user=> (single-attribute-2 {:quantity 2})
 {:total 20, :status :quote}
 ```
 
+## Referencing other attributes
+This can be done by simply using the keyword for that attribute:
+
+```
+(defmodel simple-model
+	(attr :unit-price 10)
+	(attr :total (* :unit-price (in :quantity))))
+```
+```
+user=> (simple-model {:quantity 2})
+{:total 20, :unit-price 10, :status :quote}
+```
 
 # How it was built
 
