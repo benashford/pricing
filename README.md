@@ -70,6 +70,91 @@ user=> (simple-model {:quantity 2})
 {:total 20, :unit-price 10, :status :quote}
 ```
 
+## Lookup tables
+Of course arbitrary constants only go so far, odds are any non-trivial system would require lookup tables.  Here, I present two:
+
+### `table`
+A `table` is a simple table looked-up by a key:
+
+```
+(defmodel simple-table
+	(attr :total (lookup :unit-price (in :type)))
+	(table :unit-price
+		["a" 1]
+		["b" 10]
+		["c" 100]))
+```
+
+Results:
+
+```
+user=> (simple-table {:type "b"})
+{:total 10, :status :quote}
+user=> (simple-table {:type "c"})
+{:total 100, :status :quote}
+```
+
+Attempting to use a non-existant key results in the whole thing being rejected:
+
+```
+user=> (simple-table {:type "d"})
+{:status :noquote, :reason "No such key: d in table: :unit-price"}
+```
+
+### `range-table`
+A `range-table` is intended for looking up continuous values.  It's defined by specifying the start of each range and the value assigned, the range continues until the start of the next one.  
+
+#### Infinite `range-table`s
+
+The top range, is infinite:
+
+```
+(defmodel simple-range
+	(attr :quantity (in :quantity))
+	(attr :total (* (lookup :unit-price :quantity) :quantity))
+	(range-table :unit-price
+		[0   10.0]
+		[10  9.5]
+		[100 9.0]))
+```
+
+Results:
+
+```
+user=> (simple-range {:quantity 4})
+{:total 40.0M, :quantity 4, :status :quote}
+user=> (simple-range {:quantity 40})
+{:total 380.0M, :quantity 40, :status :quote}
+user=> (simple-range {:quantity 400})
+{:total 3600.0M, :quantity 400, :status :quote}
+```
+
+#### Limited `range-table`s
+
+An upper limit can be applied to a `range-table` by using the keyword `:stop`, for example:
+
+```
+(defmodel simple-range-limited
+	(attr :quantity (in :quantity))
+	(attr :total (* (lookup :unit-price :quantity) :quantity))
+	(range-table :unit-price
+		[0   10.0]
+		[10  9.5]
+		[100 9.0]
+		[200 :stop]))
+```
+
+Results:
+
+```
+user=> (simple-range-limited {:quantity 4})
+{:total 40.0M, :quantity 4, :status :quote}
+user=> (simple-range-limited {:quantity 40})
+{:total 380.0M, :quantity 40, :status :quote}
+user=> (simple-range-limited {:quantity 400})
+{:status :noquote, :reason "No such key: 400 in table: :unit-price"}
+```
+
 # How it was built
 
 TBC
