@@ -254,4 +254,14 @@ user=> (->> [1 2 3] (map #(apportionment-example {:number-of-employees %})) (map
 
 # How it was built
 
-TBC
+This DSL has been implemented with a healthy dose of macros and dynamic binding.
+
+Macros are used to expand each principal element (e.g. `defmodel`, `item`, `attr`, etc.) into a function; in the case of `defmodel` this function is bound to the namespace in which `defmodel` is used; the other functions are kept within a list of functions that are called in sequence at runtime.  The lookup tables are expanded into `cond` statements.
+
+Dynamic binding is used both during the macro-expansion stage, to allow nesting of `item`s amonst other things, but also at runtime so that the `in` and `out` (usually not directly referenced) vars are as would be expected at runtime based on their order when declared before expansion.
+
+The full engine of the DSL is approximately 180 lines, and can be found in [engine.clj](src/pricing/engine.clj).
+
+# Still to-do
+
+Much, see [`TODO`](TODO).  Since this was my first attempt at a Clojure DSL there's also a list of inefficiencies that I also intend to remove (e.g. where I've replicated stuff that's in the core library - e.g. for walking through the code during macro-expansion).
