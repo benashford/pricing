@@ -155,6 +155,45 @@ user=> (simple-range-limited {:quantity 400})
 {:status :noquote, :reason "No such key: 400 in table: :unit-price"}
 ```
 
+## Nesting attributes
+What if your pricing model includes multiple groups of attributes.  For example, our hypothetical evil enterprise software suite pricing model may have a group called "licensing" and one called "support", both of which may have similiar attributes (e.g. unit cost).  (A full example is [here](src/pricing/core.clj).)  In these cases you can group attributes as items:
+
+```
+(defmodel item-example
+    (item :the-item
+        (attr :quantity (in :quantity))
+        (attr :unit-price 4)
+        (attr :total (* :quantity :unit-price))))
+```
+
+Result:
+
+```
+user=> (item-example {:quantity 12})
+{:the-item {:total 48, :unit-price 4, :quantity 12}, :status :quote}
+```
+
+### Referencing nested attributes
+
+Nested attributes can be referenced with a simple dotted notation:
+
+```
+(defmodel item-example-2
+	(item :item-1
+		(attr :total 100.0))
+	(item :item-2
+		(attr :total 203.12))
+	(attr :grand-total (+ :item-1.total :item-2.total)))
+```
+
+Result:
+
+```
+user=> (item-example-2 {})
+{:grand-total 303.12M, :item-2 {:total 203.12M}, :item-1 {:total 100.0M}, :status :quote}
+```
+
+
 # How it was built
 
 TBC
