@@ -193,6 +193,64 @@ user=> (item-example-2 {})
 {:grand-total 303.12M, :item-2 {:total 203.12M}, :item-1 {:total 100.0M}, :status :quote}
 ```
 
+## Aggregating nested attributes
+Now imagine you have a several dozen nested attributes, e.g. pricing components, it would be quite tedious (and difficult to maintain) to add a `total` attribute that added them all together.  Instead you can aggregate them:
+
+```
+(defmodel aggregation-example
+	(item :components
+		(item :a
+			(attr :total 1))
+		(item :b
+			(attr :total 2))
+		(item :c
+			(attr :total 3))
+		(aggregation :total +)))
+```
+
+Result:
+
+```
+user=> (aggregation-example {})
+{:components {:total-apportionment-factor 1, :total 6, :c {:total-before-apportionment 3, :total 3}, :b {:total-before-apportionment 2, :total 2}, :a {:total-before-apportionment 1, :total 1}}, :status :quote}
+```
+
+It takes two parameters: 1) the name of the attribute to aggregate; and 2) the function to use.  The result is an attribute at the parent level with the same name.
+
+## Apportionment
+
+Use case: your hypothetical evil enterprise software suite has a minimum price, so when a customer opts for the most basic option there's still a minimum price which is apportioned onto the bill.
+
+```
+(defmodel apportionment-example
+	(attr :number-of-employees (in :number-of-employees))
+	(item :components
+		(item :licence
+			(attr :total (* 10 :number-of-employees)))
+		(item :training
+			(attr :total (* 2500 :number-of-employees)))
+		(item :support
+			(attr :total (* 100 :number-of-employees)))
+		(aggregation :total + minimum-of 5000.0)))
+```
+
+Results:
+
+```
+user=> (apportionment-example {:number-of-employees 1})
+{:components {:total-apportionment-factor 1.91570881226M, :total 5000.0M, :support {:total-before-apportionment 100, :total 191.570881226M}, :training {:total-before-apportionment 2500, :total 4789.27203065M}, :licence {:total-before-apportionment 10, :total 19.1570881226M}}, :number-of-employees 1, :status :quote}
+user=> (apportionment-example {:number-of-employees 2})
+{:components {:total-apportionment-factor 1, :total 5220, :support {:total-before-apportionment 200, :total 200}, :training {:total-before-apportionment 5000, :total 5000}, :licence {:total-before-apportionment 20, :total 20}}, :number-of-employees 2, :status :quote}
+user=> (apportionment-example {:number-of-employees 3})
+{:components {:total-apportionment-factor 1, :total 7830, :support {:total-before-apportionment 300, :total 300}, :training {:total-before-apportionment 7500, :total 7500}, :licence {:total-before-apportionment 30, :total 30}}, :number-of-employees 3, :status :quote}
+```
+
+Or in a more readable way:
+
+```
+user=> (->> [1 2 3] (map #(apportionment-example {:number-of-employees %})) (map #(get-in % [:components :total])))
+(5000.0M 5220 7830)
+```
 
 # How it was built
 
