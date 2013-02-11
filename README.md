@@ -33,7 +33,7 @@ user=> (wont-quote {})
 ## Attributes
 A valid quote will consist of one or many attributes, at the very least there'll be one representing the total price; to define one:
 
-```
+```clojure
 (defmodel single-attribute
 	(attr :total 100))
 ```
@@ -48,7 +48,7 @@ user=> (single-attribute {})
 ## Referencing input data
 Since this pricing engine is intended to be dynamic, it needs to be able to reference data that's fed into it.  This can be done by referencing the var `in`.  For example:
 
-```
+```clojure
 (defmodel single-attribute-2
 	(attr :total (* 10 (in :quantity))))
 ```
@@ -60,7 +60,7 @@ user=> (single-attribute-2 {:quantity 2})
 ## Referencing other attributes
 This can be done by simply using the keyword for that attribute:
 
-```
+```clojure
 (defmodel simple-model
 	(attr :unit-price 10)
 	(attr :total (* :unit-price (in :quantity))))
@@ -76,7 +76,7 @@ Of course arbitrary constants only go so far, odds are any non-trivial system wo
 ### `table`
 A `table` is a simple table looked-up by a key:
 
-```
+```clojure
 (defmodel simple-table
 	(attr :total (lookup :unit-price (in :type)))
 	(table :unit-price
@@ -108,7 +108,7 @@ A `range-table` is intended for looking up continuous values.  It's defined by s
 
 The top range, is infinite:
 
-```
+```clojure
 (defmodel simple-range
 	(attr :quantity (in :quantity))
 	(attr :total (* (lookup :unit-price :quantity) :quantity))
@@ -133,7 +133,7 @@ user=> (simple-range {:quantity 400})
 
 An upper limit can be applied to a `range-table` by using the keyword `:stop`, for example:
 
-```
+```clojure
 (defmodel simple-range-limited
 	(attr :quantity (in :quantity))
 	(attr :total (* (lookup :unit-price :quantity) :quantity))
@@ -158,7 +158,7 @@ user=> (simple-range-limited {:quantity 400})
 ## Nesting attributes
 What if your pricing model includes multiple groups of attributes.  For example, our hypothetical evil enterprise software suite pricing model may have a group called "licensing" and one called "support", both of which may have similiar attributes (e.g. unit cost).  (A full example is [here](src/pricing/core.clj).)  In these cases you can group attributes as items:
 
-```
+```clojure
 (defmodel item-example
     (item :the-item
         (attr :quantity (in :quantity))
@@ -177,7 +177,7 @@ user=> (item-example {:quantity 12})
 
 Nested attributes can be referenced with a simple dotted notation:
 
-```
+```clojure
 (defmodel item-example-2
 	(item :item-1
 		(attr :total 100.0))
@@ -196,7 +196,7 @@ user=> (item-example-2 {})
 ## Aggregating nested attributes
 Now imagine you have a several dozen nested attributes, e.g. pricing components, it would be quite tedious (and difficult to maintain) to add a `total` attribute that added them all together.  Instead you can aggregate them:
 
-```
+```clojure
 (defmodel aggregation-example
 	(item :components
 		(item :a
@@ -221,7 +221,7 @@ It takes two parameters: 1) the name of the attribute to aggregate; and 2) the f
 
 Use case: your hypothetical evil enterprise software suite has a minimum price, so when a customer opts for the most basic option there's still a minimum price which is apportioned onto the bill.
 
-```
+```clojure
 (defmodel apportionment-example
 	(attr :number-of-employees (in :number-of-employees))
 	(item :components
