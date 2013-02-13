@@ -271,6 +271,8 @@ user=> (apportionment-example {:number-of-employees 3})
 
 Or in English, the price for a single user is £5,000, for two is £5,220, and for three users is £7,830.  If apportionment had not been present the single user license would have cost £2,610.
 
+In order to achieve this the sub-totals are increased uniformally so the sum is the minimum price of £5,000.  E.g. the `:support` subtotal goes from £100 to £191.570881226.  That looks a bit ugly, not the sort of number you could print on an invoice, which leads me to...
+
 ## Rounding
 
 In the Apportionment example you can see that the apportioned sub-totals have expanded to many decimal places, this will happen when the apportionment factor is not a precise multiple/divisor.
@@ -345,6 +347,39 @@ user=> (complex-rounding-example {:users 23})
  :status :quote}
 ```
 
+### Apportionment and rounding
+
+Just to prove the two concepts work together, here's the example from the apportionment example with a two decimal place rounding applied:
+
+```clojure
+(defmodel apportionment-rounded-example
+	(rounding :total 2)
+	(attr :number-of-employees (in :number-of-employees))
+	(item :components
+		(item :licence
+			(attr :total (* 10.0 :number-of-employees)))
+		(item :training
+			(attr :total (* 2500.0 :number-of-employees)))
+		(item :support
+			(attr :total (* 100.0 :number-of-employees)))
+		(aggregation :total + minimum-of 5000.0)))
+```
+
+Result:
+
+```
+user=> (apportionment-rounded-example {:number-of-employees 1})
+{:components
+ {:total-apportionment-factor 1.91570881226M,
+  :total 5000.00M,
+  :support {:total-before-apportionment 100.00M, :total 191.57M},
+  :training {:total-before-apportionment 2500.00M, :total 4789.27M},
+  :licence {:total-before-apportionment 10.00M, :total 19.16M}},
+ :number-of-employees 1,
+ :status :quote}
+```
+
+The sub-`:total`s are now all rounded to two decimal places that add up to £5,000.
 
 # How it was built
 
