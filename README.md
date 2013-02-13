@@ -252,6 +252,44 @@ user=> (->> [1 2 3] (map #(apportionment-example {:number-of-employees %})) (map
 (5000.0M 5220 7830)
 ```
 
+## Rounding
+
+In the Apportionment example you can see that the apportioned sub-totals have expanded to many decimal places, this will happen when the apportionment factor is not a precise multiple/divisor.
+
+Irrational/infinitely recurring numbers could occur in other examples too:
+
+```clojure
+(defmodel non-rounding
+    (attr :original 1000.0)
+    (attr :divisor 3.0)
+    (attr :total (/ :original :divisor)))
+```
+
+This results in:
+
+```
+user=> (non-rounding {})
+{:total 333.333333333M, :divisor 3.0M, :original 1000.0M, :status :quote}
+```
+
+Having intermediate values represented in an arbitrary number of decimal places makes sense, and in many situations will be essential for accuracy.
+But in our case of a pricing model, the final break down should be rounded to two decimal places:
+
+```clojure
+(defmodel rounding-example
+    (rounding :total 2)
+    (attr :original 1000.0)
+    (attr :divisor 3.0)
+    (attr :total (/ :original :divisor)))
+```
+
+All attributes called `:total` are now shown to two decimal places:
+
+```
+user=> (rounding-example {})
+{:total 333.33M, :divisor 3.0M, :original 1000.0M, :status :quote}
+```
+
 # How it was built
 
 This DSL has been implemented with a healthy dose of macros and dynamic binding.
