@@ -217,6 +217,8 @@ user=> (aggregation-example {})
 
 It takes two parameters: 1) the name of the attribute to aggregate; and 2) the function to use.  The result is an attribute at the parent level with the same name.
 
+You'll see two extra attributes have been added at the `:components` level, one is `:total` as you'd expect, the other is `:total-apportionment-factor` - what is this?  The next section will explain:
+
 ## Apportionment
 
 Use case: your hypothetical evil enterprise software suite has a minimum price, so when a customer opts for the most basic option there's still a minimum price which is apportioned onto the bill.
@@ -226,11 +228,11 @@ Use case: your hypothetical evil enterprise software suite has a minimum price, 
 	(attr :number-of-employees (in :number-of-employees))
 	(item :components
 		(item :licence
-			(attr :total (* 10 :number-of-employees)))
+			(attr :total (* 10.0 :number-of-employees)))
 		(item :training
-			(attr :total (* 2500 :number-of-employees)))
+			(attr :total (* 2500.0 :number-of-employees)))
 		(item :support
-			(attr :total (* 100 :number-of-employees)))
+			(attr :total (* 100.0 :number-of-employees)))
 		(aggregation :total + minimum-of 5000.0)))
 ```
 
@@ -238,19 +240,36 @@ Results:
 
 ```
 user=> (apportionment-example {:number-of-employees 1})
-{:components {:total-apportionment-factor 1.91570881226M, :total 5000.0M, :support {:total-before-apportionment 100, :total 191.570881226M}, :training {:total-before-apportionment 2500, :total 4789.27203065M}, :licence {:total-before-apportionment 10, :total 19.1570881226M}}, :number-of-employees 1, :status :quote}
+{:components
+ {:total-apportionment-factor 1.91570881226M,
+  :total 5000.0M,
+  :support {:total-before-apportionment 100.0M, :total 191.570881226M},
+  :training
+  {:total-before-apportionment 2500.0M, :total 4789.27203065M},
+  :licence {:total-before-apportionment 10.0M, :total 19.1570881226M}},
+ :number-of-employees 1,
+ :status :quote}
 user=> (apportionment-example {:number-of-employees 2})
-{:components {:total-apportionment-factor 1, :total 5220, :support {:total-before-apportionment 200, :total 200}, :training {:total-before-apportionment 5000, :total 5000}, :licence {:total-before-apportionment 20, :total 20}}, :number-of-employees 2, :status :quote}
+{:components
+ {:total-apportionment-factor 1M,
+  :total 5220.0M,
+  :support {:total-before-apportionment 200.0M, :total 200.0M},
+  :training {:total-before-apportionment 5000.0M, :total 5000.0M},
+  :licence {:total-before-apportionment 20.0M, :total 20.0M}},
+ :number-of-employees 2,
+ :status :quote}
 user=> (apportionment-example {:number-of-employees 3})
-{:components {:total-apportionment-factor 1, :total 7830, :support {:total-before-apportionment 300, :total 300}, :training {:total-before-apportionment 7500, :total 7500}, :licence {:total-before-apportionment 30, :total 30}}, :number-of-employees 3, :status :quote}
+{:components
+ {:total-apportionment-factor 1M,
+  :total 7830.0M,
+  :support {:total-before-apportionment 300.0M, :total 300.0M},
+  :training {:total-before-apportionment 7500.0M, :total 7500.0M},
+  :licence {:total-before-apportionment 30.0M, :total 30.0M}},
+ :number-of-employees 3,
+ :status :quote}
 ```
 
-Or in a more readable way:
-
-```
-user=> (->> [1 2 3] (map #(apportionment-example {:number-of-employees %})) (map #(get-in % [:components :total])))
-(5000.0M 5220 7830)
-```
+Or in English, the price for a single user is £5,000, for two is £5,220, and for three users is £7,830.  If apportionment had not been present the single user license would have cost £2,610.
 
 ## Rounding
 
@@ -289,6 +308,43 @@ All attributes called `:total` are now shown to two decimal places:
 user=> (rounding-example {})
 {:total 333.33M, :divisor 3.0M, :original 1000.0M, :status :quote}
 ```
+
+Different attributes can be applied with different levels of rounding:
+
+```clojure
+(defmodel complex-rounding-example
+	(rounding :total 2)
+	(rounding :unit-price 3)
+	(attr :multiplier (/ 1.0 3.0))
+	(item :breakdown
+		(item :part-a
+			(attr :unit-price (* 100 :multiplier))
+			(attr :total (* :unit-price (in :users))))
+		(item :part-b
+			(attr :unit-price (* Math/PI :multiplier))
+			(attr :total (* :unit-price (in :users))))
+		(aggregation :total +)))
+```
+
+Usage:
+
+```
+user=> (complex-rounding-example {:users 23})
+{:breakdown
+ {:total-apportionment-factor 1M,
+  :total 790.74M,
+  :part-b
+  {:total-before-apportionment 24.08M,
+   :total 24.08M,
+   :unit-price 1.047M},
+  :part-a
+  {:total-before-apportionment 766.66M,
+   :total 766.66M,
+   :unit-price 33.333M}},
+ :multiplier 0.333333333333M,
+ :status :quote}
+```
+
 
 # How it was built
 
