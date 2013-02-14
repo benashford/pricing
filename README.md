@@ -381,6 +381,47 @@ user=> (apportionment-rounded-example {:number-of-employees 1})
 
 The sub-`:total`s are now all rounded to two decimal places that add up to £5,000.
 
+## Extending
+The expressions that make up the body of an `item` can be any Clojure expression, including calls to other functions:
+
+```clojure
+(defn calculate-total [& xs]
+	(reduce + xs))
+	
+(defmodel ext-example
+	(attr :total (calculate-total 1 2 3)))
+```
+
+This allows anything complicated, or involving other systems (e.g. database lookups) to be extracted as a function keeping the model definition clean.
+
+## Edge-cases and pitfalls
+
+### Namespaceing
+
+In all these examples I've imported the pricing engine as `(use pricing.engine)` even though this approach is generally frowned upon as it imports the whole namespace.  This is because it's intended to be a human-readable DSL rather than a pick-and-choose library.  For that reason it would be best to define models in specific namespaces so that pricing engine functions don't clash with other application logic.
+
+### Effects of dynamic binding
+
+If calling to an external function within the same namespace, then the `in` and `out` vars are still available, but would probably be bad practice to refer to directly:
+
+```clojure
+(defn calculate-total []
+	(* 100.0 (in :users)))
+	
+(defmodel dynamic-example
+	(attr :total (calculate-total)))
+```
+
+Result:
+
+```
+user=> (dynamic-example {:users 3})
+{:total 300.0, :status :quote}
+```
+
+But the short-cut of referencing a previous value by keyword will no-longer work.
+
+
 # How it was built
 
 This DSL has been implemented with a healthy dose of macros and dynamic binding.
