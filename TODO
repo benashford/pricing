@@ -5,3 +5,5 @@
 * Two-dimensional tables
 * Review both item and defmodel macro - there's a certain amount of both duplication and non idiomatic code
 * Replace the "walking" macros implemented with core functionality that does the same thing
+* Filters should report all failures, not just the first
+* Apply more idiomatic naming convention for dynamic variables *eg* - but only where it makes sense.
