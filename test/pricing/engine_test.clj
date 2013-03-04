@@ -27,6 +27,27 @@
        (walker (+ 1 :blah) keyword? (fn [_] 1)) =expands-to=> (+ 1 1)
        (walker (+ 1 :blah) keyword? (fn [item#] `(~item# {:blah 1}))) =expands-to=> (+ 1 (:blah {:blah 1})))
 
+;; decline
+;;
+(defn declined? [exp-value]
+  (fn [fs]
+    (let [f (last fs)
+          act-value (try (f) nil
+                         (catch Exception e
+                           (if (pricing-exception? e)
+                             (if (= (exception-type e) :decline)
+                               (message e)))))]
+      (= act-value exp-value))))
+      
+
+(facts "about decline"
+       (binding [filters (atom [])
+                 in {:a 1 :c 100}]
+         (decline [:a > 1] "decline-a") => (declined? nil)
+         (decline [:a >= 1] "decline-a") => (declined? "decline-a")
+         (decline [:b = 0] "decline-b") => (declined? nil)
+         (decline [:c < 50] "decline-c") => (declined? nil)))
+
 ;; round
 ;;
 (facts "about round"

@@ -5,6 +5,7 @@
 (def ^:dynamic lookups nil)
 (def ^:dynamic aggregations nil)
 (def ^:dynamic roundings nil)
+(def ^:dynamic filters nil)
 
 (def ^:dynamic in nil)
 (def ^:dynamic out nil)
@@ -28,10 +29,13 @@
 (defn raise-pricing-exception [msg t]
   (throw (proxy [Exception pricing.engine.PricingException] [] 
            (message [] msg)
-           (exception-type [] t))))
+           (exception_type [] t))))
 
 (defn no-quote! [msg]
-  (raise-pricing-exception msg :no-quote))
+  (raise-pricing-exception msg :noquote))
+
+(defn decline! [msg]
+  (raise-pricing-exception msg :decline))
 
 (defn pricing-exception? [e]
   (satisfies? PricingException e))
@@ -58,6 +62,12 @@
   (walk-int exprs pred callback))
 
 ;; Pricing engine
+
+(defn decline [[param-name pred-f value] message]
+  (swap! filters conj
+         (fn []
+           (if (pred-f (in param-name) value)
+             (decline! message)))))
 
 (defn round [number places]
   (.setScale (with-precision 12 (bigdec number)) places java.math.BigDecimal/ROUND_HALF_EVEN))
@@ -151,7 +161,9 @@
                               (fn [[k# v#]]
                                 (let [current-total# (~key v#)]
                                   [k# (merge v#
-                                             {(ext-keyword ~key "-before-apportionment") current-total#
+                                             {(ext-keyword
+                                               ~key
+                                               "-before-apportionment") current-total#
                                               ~key (apply-rounding
                                                     ~key
                                                     (*
@@ -165,25 +177,30 @@
 (defmacro defmodel [modelname & body]
   `(binding [steps (atom [])
              lookups (atom {})
-             roundings (atom {})]
+             roundings (atom {})
+             filters (atom [])]
      (to-bigdec
       (do
         ~@body))
      (let [steps-int# @steps
            lookups-int# @lookups
-           roundings-int# @roundings]
+           roundings-int# @roundings
+           filters-int# @filters]
        (defn ~modelname [in#]
          (with-precision 12 :rounding HALF_EVEN
            (try
-             (let [out-atom# (atom {:status :quote})]
-               (doseq [step# steps-int#]
-                 (binding [in in#
-                           out @out-atom#
-                           lookups lookups-int#
-                           roundings roundings-int#]
-                   (swap! out-atom# merge (step#))))
-               @out-atom#)
-             (catch Exception e#
-               (if (pricing-exception? e#)
-                 {:status :noquote :reason (message e#)}
-                 (throw e#)))))))))
+             (binding [in in#]
+               (doseq [filt# filters-int#]
+                 (filt#))
+               (let [out-atom# (atom {:status :quote})]
+                 (doseq [step# steps-int#]
+                   (binding [out @out-atom#
+                             lookups lookups-int#
+                             roundings roundings-int#]
+                     (swap! out-atom# merge (step#))))
+                 @out-atom#)
+               (catch Exception e#
+                 (if (pricing-exception? e#)
+                   {:status (exception-type e#) 
+                    :reason (message e#)}
+                   (throw e#))))))))))

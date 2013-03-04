@@ -2,6 +2,9 @@
   (:use pricing.engine))
 
 (defmodel sample
+  (decline [:full-time-employees >= 10000] "Too many employees to quote")
+  (decline [:part-time-employees >= 1000] "More than 1000 part-timers requires a manual quote")
+  
   (rounding :total 2)
 
   (attr :number-of-employees (+ (in :full-time-employees) (in :part-time-employees)))

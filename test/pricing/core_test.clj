@@ -42,4 +42,12 @@
                             :total 2500.00M}
                 :company-type-discount 0.0M
                 :total 2500.00M})
-                
+
+(fact (sample {:full-time-employees 10001
+               :part-time-employees 10}) =>
+               {:status :declined
+                :reason "Too many employees to quote"})
+(fact (sample {:full-time-employees 10
+               :part-time-employees 1001}) =>
+               {:status :declined
+                :reason "More than 1000 part-timers requires a manual quote"})
