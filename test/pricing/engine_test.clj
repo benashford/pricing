@@ -35,7 +35,7 @@
           act-value (try (f) nil
                          (catch Exception e
                            (if (pricing-exception? e)
-                             (if (= (exception-type e) :decline)
+                             (if (= (exception-type e) :declined)
                                (message e)))))]
       (= act-value exp-value))))
       

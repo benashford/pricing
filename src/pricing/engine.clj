@@ -35,7 +35,7 @@
   (raise-pricing-exception msg :noquote))
 
 (defn decline! [msg]
-  (raise-pricing-exception msg :decline))
+  (raise-pricing-exception msg :declined))
 
 (defn pricing-exception? [e]
   (satisfies? PricingException e))
