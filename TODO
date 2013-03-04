@@ -7,3 +7,5 @@
 * Replace the "walking" macros implemented with core functionality that does the same thing
 * Filters should report all failures, not just the first
 * Apply more idiomatic naming convention for dynamic variables *eg* - but only where it makes sense.
+* Fix matches in Midje test to be more idiomatic.
+* Investigate why ex-info and ex-data don't work.

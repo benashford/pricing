@@ -21,14 +21,20 @@
 
 ;; Error handling
 
-(defprotocol NoQuote
-  (message [msg]))
+(defprotocol PricingException
+  (message [msg])
+  (exception-type [t]))
 
-(defn no-quote [msg]
-  (throw (proxy [Exception pricing.engine.NoQuote] [] (message [] msg))))
+(defn raise-pricing-exception [msg t]
+  (throw (proxy [Exception pricing.engine.PricingException] [] 
+           (message [] msg)
+           (exception-type [] t))))
 
-(defn no-quote? [e]
-  (satisfies? NoQuote e))
+(defn no-quote! [msg]
+  (raise-pricing-exception msg :no-quote))
+
+(defn pricing-exception? [e]
+  (satisfies? PricingException e))
 
 ;; Macro support
 
@@ -84,7 +90,7 @@
             (fn [key#]
               (if (contains? lookup-table# key#)
                 (lookup-table# key#)
-                (no-quote (str "No such key: " key# " in table: " ~table-name)))))))
+                (no-quote! (str "No such key: " key# " in table: " ~table-name)))))))
 
 (defmacro range-table [table-name & data]
   (let [ranges (map vector (fence-panel (map first data)) (map second data))
@@ -98,7 +104,7 @@
                           `((and (>= ~key-param ~start) (< ~key-param ~end)) ~value)))
                ~@(if-not (= last-value :stop)
                    `((>= ~key-param ~last-post) ~last-value))
-               :else (no-quote (str "No such key: " ~key-param " in table: " ~table-name)))))))
+               :else (no-quote! (str "No such key: " ~key-param " in table: " ~table-name)))))))
 
 (defn lookup [table-name key]
   (let [lookup-fn (lookups table-name)]
@@ -178,6 +184,6 @@
                    (swap! out-atom# merge (step#))))
                @out-atom#)
              (catch Exception e#
-               (if (no-quote? e#)
+               (if (pricing-exception? e#)
                  {:status :noquote :reason (message e#)}
                  (throw e#)))))))))

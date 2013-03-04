@@ -13,10 +13,10 @@
 ;;
 (facts "about no-quote"
        (try
-         (no-quote "test")
+         (no-quote! "test")
          (catch Exception e
-           (no-quote? e))) => true
-       (no-quote? (Exception. "other")) => false)
+           (pricing-exception? e))) => true
+       (pricing-exception? (Exception. "other")) => false)
 
 ;; walker
 ;;
@@ -82,7 +82,7 @@
 (defn is-no-quote [wrapped-e msg]
   (try 
     (let [e (.throwable wrapped-e)]
-      (if (no-quote? e)
+      (if (pricing-exception? e)
         (= msg (message e))))
     (catch Throwable t
       false)))
@@ -187,5 +187,5 @@
        (defmodel good)
        (good {}) => {:status :quote}
        (defmodel fussy
-         (attr :noway (no-quote "no chance")))
+         (attr :noway (no-quote! "no chance")))
        (fussy {}) => {:status :noquote :reason "no chance"})
