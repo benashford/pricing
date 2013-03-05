@@ -155,6 +155,25 @@ user=> (simple-range-limited {:quantity 400})
 {:status :noquote, :reason "No such key: 400 in table: :unit-price"}
 ```
 
+## Filtering
+So far the defined model will earnestly attempt to produce a result for any input, but in the real world there will be many circumstances which need to be avoided for whatever reason.  Filtering rules are used to decline to produce a result based on data coming in.  For example:
+
+```clojure
+(defmodel filter-example
+	(decline [:full-time-employees < 1] "There must be at least one full-time employee")
+	(attr :employees (apply + (map in [:full-time-employees :part-time-employees])))
+	(attr :total (* 10 :employees)))
+```
+
+Result:
+
+```
+user=> (filter-example {:full-time-employees 1 :part-time-employees 2})
+{:total 30, :employees 3, :status :quote}
+user=> (filter-example {:full-time-employees 0 :part-time-employees 3})
+{:status :declined, :reason "There must be at least one full-time employee"}
+```
+
 ## Nesting attributes
 What if your pricing model includes multiple groups of attributes.  For example, our hypothetical evil enterprise software suite pricing model may have a group called "licensing" and one called "support", both of which may have similiar attributes (e.g. unit cost).  (A full example is [here](src/pricing/core.clj).)  In these cases you can group attributes as items:
 
