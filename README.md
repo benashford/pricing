@@ -449,7 +449,7 @@ Macros are used to expand each principal element (e.g. `defmodel`, `item`, `attr
 
 Dynamic binding is used both during the macro-expansion stage, to allow nesting of `item`s amonst other things, but also at runtime so that the `in` and `out` (usually not directly referenced) vars are as would be expected at runtime based on their order when declared before expansion.
 
-The full engine of the DSL is approximately 180 lines, and can be found in [engine.clj](src/pricing/engine.clj).
+The full engine of the DSL is approximately 200 lines, and can be found in [engine.clj](src/pricing/engine.clj).
 
 # Still to-do
 
